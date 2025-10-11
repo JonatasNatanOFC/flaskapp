@@ -1,27 +1,14 @@
 from flask import Flask, request, jsonify
-from models.InstituicaoEnsino import InstituicaoEnsino
-from utils.LoaderData import loadIE
+from models.AgenteEconomico import AgenteEconomico
 from models.Usuario import Usuario
+from helpers.data import getAgentesEconomicos, loadUsuarios
+
 
 app = Flask(__name__)
 
-usuarios = [
-    Usuario("12345678900", "Natan Silva", "1990-01-01").to_json(),
-    Usuario("98765432100", "Maria Souza", "1985-05-15").to_json()
-]
-instituicoesEnsino = []
-ieData = loadIE()
-for ie in ieData:
-    ie = InstituicaoEnsino(
-        ie['codigo'],
-        ie['nome'],
-        ie['co_uf'],
-        ie['co_municipio'],
-        ie['qt_mat_bas'],
-        ie['qt_mat_prof'],
-        ie['qt_mat_esp']
-    ).to_json()
-    instituicoesEnsino.append(ie)
+
+usuarios = loadUsuarios()
+agentesEconomicos = getAgentesEconomicos()
 
 
 @app.get("/")
@@ -43,60 +30,48 @@ def getUsuariosById(id: int):
 def setUsuarios():
     data = request.get_json()
 
-    usuario = {"cpf": data["cpf"], "nome": data['nome'],
-               "data_nascimento": data['data_nascimento']}
+    usuario = Usuario(
+        data['nome'],
+        data['cpf'],
+        data['data_nascimento']
+    ).to_json()
     usuarios.append(usuario)
 
     return usuario, 201
 
 
-@app.get("/instituicoesensino")
-def getInstituicoesEnsino():
-    return instituicoesEnsino, 200
+@app.get("/agenteseconomicos")
+def getAgentesEconomicos():
+    return agentesEconomicos, 200
 
 
-@app.post("/instituicoesensino")
-def criarIE():
+@app.post("/agenteseconomicos")
+def criarAE():
     data = request.get_json()
 
-    ie = InstituicaoEnsino(
-        data['codigo'],
-        data['nome'],
-        data['co_uf'],
-        data['co_municipio'],
-        data['qt_mat_bas'],
-        data['qt_mat_prof'],
-        data['qt_mat_esp']
-    ).to_json()
-    instituicoesEnsino.append(ie)
+    agente = AgenteEconomico(data).to_json()
+    agentesEconomicos.append(agente)
 
-    return ie, 201
+    return agente, 201
 
 
-@app.put("/instituicoesensino/<int:id>")
-def atualizarIE(id: int):
+@app.put("/agenteseconomicos/<int:id>")
+def atualizarAE(id: int):
     data = request.get_json()
-
-    ie = InstituicaoEnsino(
-        data['codigo'],
-        data['nome'],
-        data['co_uf'],
-        data['co_municipio'],
-        data['qt_mat_bas'],
-        data['qt_mat_prof'],
-        data['qt_mat_esp']
-    ).to_json()
-    instituicoesEnsino[id] = ie
-
-    return ie, 200
+    agente = AgenteEconomico(data).to_json()
+    agentesEconomicos[id] = agente
+    return agente, 200
 
 
-@app.delete("/instituicoesensino/<int:id>")
-def deletarIE(id: int):
-    instituicoesEnsino.pop(id)
+@app.delete("/agenteseconomicos/<int:id>")
+def deletarAE(id: int):
+    agentesEconomicos.pop(id)
     return '', 204
 
 
-@app.get("/instituicoesensino/<int:id>")
-def getInstituicoesEnsinoById(id: int):
-    return instituicoesEnsino[id], 200
+@app.get("/agenteseconomicos/<int:id>")
+def getAgenteEconomicoById(id: int):
+    return agentesEconomicos[id], 200
+
+
+# buscar por id instituição de ensino e usuário;
