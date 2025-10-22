@@ -1,15 +1,14 @@
 from flask import Flask, request, jsonify
-from models.AgenteEconomico import AgenteEconomico
+from models.InstituicaoEnsino import InstituicaoEnsino
 from models.Usuario import Usuario
-from helpers.data import getAgentesEconomicos, loadUsuarios
+from helpers.data import  getInstituicoesEnsino, loadUsuarios
 
 
 app = Flask(__name__)
 
 
 usuarios = loadUsuarios()
-agentesEconomicos = getAgentesEconomicos()
-
+instituicoesEnsino = getInstituicoesEnsino()
 
 @app.get("/")
 def index():
@@ -40,38 +39,37 @@ def setUsuarios():
     return usuario, 201
 
 
-@app.get("/agenteseconomicos")
-def getAgentesEconomicos():
-    return agentesEconomicos, 200
+@app.get("/instituicoesensino")
+def getInstituicoesEnsino():
+    return  instituicoesEnsino, 200
 
 
-@app.post("/agenteseconomicos")
-def criarAE():
+@app.post("/instituicoesensino")
+def criarIE():
     data = request.get_json()
 
-    agente = AgenteEconomico(data).to_json()
-    agentesEconomicos.append(agente)
+    ie = InstituicaoEnsino(data).to_json()
+    instituicoesEnsino.append(ie)
 
-    return agente, 201
+    return ie, 201
 
 
-@app.put("/agenteseconomicos/<int:id>")
-def atualizarAE(id: int):
+@app.put("/instituicoesensino/<int:id>")
+def atualizarIE(id: int):
     data = request.get_json()
-    agente = AgenteEconomico(data).to_json()
-    agentesEconomicos[id] = agente
-    return agente, 200
+    ie = InstituicaoEnsino(data).to_json()
+    instituicoesEnsino[id] = ie
+    return ie, 200
 
 
-@app.delete("/agenteseconomicos/<int:id>")
-def deletarAE(id: int):
-    agentesEconomicos.pop(id)
+@app.delete("/instituicoesensino/<int:id>")
+def deletarIE(id: int):
+    instituicoesEnsino.pop(id)
     return '', 204
 
 
-@app.get("/agenteseconomicos/<int:id>")
-def getAgenteEconomicoById(id: int):
-    return agentesEconomicos[id], 200
+@app.get("/instituicoesensino/<int:id>")
+def getInstituicaoEnsinoById(id: int):
+    return instituicoesEnsino[id], 200
 
 
-# buscar por id instituição de ensino e usuário;
