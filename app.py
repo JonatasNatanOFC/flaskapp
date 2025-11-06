@@ -1,14 +1,24 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, abort
 from models.InstituicaoEnsino import InstituicaoEnsino
 from models.Usuario import Usuario
-from helpers.data import  getInstituicoesEnsino, loadUsuarios
+from helpers.data import getInstituicoesEnsino, loadUsuarios
+import sqlite3
 
 
 app = Flask(__name__)
 
+DATABASE = 'censoescolar.db'
+
+
+def get_db():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
 
 usuarios = loadUsuarios()
 instituicoesEnsino = getInstituicoesEnsino()
+
 
 @app.get("/")
 def index():
@@ -17,6 +27,12 @@ def index():
 
 @app.get("/usuarios")
 def getUsuarios():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tb_usuario")
+    usuarios_rows = cursor.fetchall()
+    conn.close()
+    usuarios = [dict(row) for row in usuarios_rows]
     return jsonify(usuarios), 200
 
 
@@ -41,7 +57,13 @@ def setUsuarios():
 
 @app.get("/instituicoesensino")
 def getInstituicoesEnsino():
-    return  instituicoesEnsino, 200
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tb_instituicao")
+    instituicoes_rows = cursor.fetchall()
+    conn.close()
+    instituicoes = [dict(row) for row in instituicoes_rows]
+    return jsonify(instituicoes), 200
 
 
 @app.post("/instituicoesensino")
@@ -71,5 +93,3 @@ def deletarIE(id: int):
 @app.get("/instituicoesensino/<int:id>")
 def getInstituicaoEnsinoById(id: int):
     return instituicoesEnsino[id], 200
-
-
