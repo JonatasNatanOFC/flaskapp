@@ -1,23 +1,26 @@
-from flask import Flask, request, jsonify, abort
-from models.InstituicaoEnsino import InstituicaoEnsino
-from models.Usuario import Usuario
-from helpers.data import getInstituicoesEnsino, loadUsuarios
 import sqlite3
+from flask import Flask, request, jsonify
+from datetime import datetime
 
+from models.Usuario import Usuario
+from helpers.data import getInstituicoesEnsino
 
 app = Flask(__name__)
 
-DATABASE = 'censoescolar.db'
+usuario = Usuario(1, "João", "00011122233", "2025-10-09")
+usuarios = [usuario]
 
-
-def get_db():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-usuarios = loadUsuarios()
 instituicoesEnsino = getInstituicoesEnsino()
+
+DATABASE_NAME = "censoescolar.db"
+
+
+def is_data_valida(data_string):
+    try:
+        datetime.strptime(data_string, '%Y-%m-%d')
+        return True
+    except ValueError:
+        return False
 
 
 @app.get("/")
@@ -27,13 +30,7 @@ def index():
 
 @app.get("/usuarios")
 def getUsuarios():
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM tb_usuario")
-    usuarios_rows = cursor.fetchall()
-    conn.close()
-    usuarios = [dict(row) for row in usuarios_rows]
-    return jsonify(usuarios), 200
+    return jsonify(usuarios)
 
 
 @app.get("/usuarios/<int:id>")
@@ -42,54 +39,75 @@ def getUsuariosById(id: int):
 
 
 @app.post("/usuarios")
-def setUsuarios():
-    data = request.get_json()
+def setUsuario():
+    usuarioJson = request.get_json()
 
-    usuario = Usuario(
-        data['nome'],
-        data['cpf'],
-        data['data_nascimento']
-    ).to_json()
-    usuarios.append(usuario)
+    # Validação simples sem framework dos dados do usuário.
+    nome = usuarioJson['nome']
+    if (len(nome) <= 0 or (len(nome) > 0 and not (nome.isalpha()))):
+        return {"mensagem": "O nome do usuário é inválido!"}, 400
+
+    cpf = usuarioJson['cpf']
+    if (len(cpf) == 11):
+        return {"mensagem": "O cpf do usuário é inválido!"}, 400
+
+    nascimento = usuarioJson['nascimento']
+    datetime.strptime(nascimento, )
+    if (is_data_valida(nascimento)):
+        return {"mensagem": "A data de nascimento do usuário é inválida!"}, 400
+
+    # Manipulação com o banco de dados.
+    # conectar com o banco.
+    conn = sqlite3.connect(DATABASE_NAME)
+
+    # capturar o cursor
+    cursor = conn.cursor()
+
+    # consultar: execução da dml.
+    statement = "INSERT INTO tb_instituicao(nome, cpf, nascimento) values(?, ?, ?)"
+    cursor.execute(statement, (nome, cpf, nascimento))
+
+    id = cursor.lastrowid
+
+    # Commit - Confirma transação.
+    cursor.commit()
+
+    # Adicionar id do registro criado ao usuário de rotorno.
+    usuarioJson.update({"id": id})
 
     return usuario, 201
 
 
 @app.get("/instituicoesensino")
 def getInstituicoesEnsino():
-    conn = get_db()
+    # conectar com o banco.
+    conn = sqlite3.connect(DATABASE_NAME)
+
+    # capturar o cursor
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM tb_instituicao")
-    instituicoes_rows = cursor.fetchall()
+
+    # consultar: execução da dml.
+    statement = "SELECT * FROM tb_instituicao"
+    cursor.execute(statement)
+
+    # fetch
+    resultset = cursor.fetchall()
+
+    instituicaoEnsinoResponse = []
+    for row in resultset:
+        id = row[0]
+        codigo = row[1]
+        nome = row[2]
+        instituicaoEnsino = {"id": id, "codigo": codigo, "nome": nome}
+        instituicaoEnsinoResponse.append(instituicaoEnsino)
+
+    # fechar a conexão
     conn.close()
-    instituicoes = [dict(row) for row in instituicoes_rows]
-    return jsonify(instituicoes), 200
 
-
-@app.post("/instituicoesensino")
-def criarIE():
-    data = request.get_json()
-
-    ie = InstituicaoEnsino(data).to_json()
-    instituicoesEnsino.append(ie)
-
-    return ie, 201
-
-
-@app.put("/instituicoesensino/<int:id>")
-def atualizarIE(id: int):
-    data = request.get_json()
-    ie = InstituicaoEnsino(data).to_json()
-    instituicoesEnsino[id] = ie
-    return ie, 200
-
-
-@app.delete("/instituicoesensino/<int:id>")
-def deletarIE(id: int):
-    instituicoesEnsino.pop(id)
-    return '', 204
+    return instituicaoEnsinoResponse, 200
 
 
 @app.get("/instituicoesensino/<int:id>")
-def getInstituicaoEnsinoById(id: int):
-    return instituicoesEnsino[id], 200
+def getInstituicoesEnsinoById(id: int):
+    ieDict = instituicoesEnsino[id].to_json()
+    return jsonify(ieDict), 200

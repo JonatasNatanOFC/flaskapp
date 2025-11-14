@@ -1,38 +1,28 @@
 import json
 from models.InstituicaoEnsino import InstituicaoEnsino
-from models.Usuario import Usuario
 
 
 def getInstituicoesEnsino():
 
     instituicoesEnsino = []
 
-    with open('data/instituicoes.json', 'r', encoding='utf-8') as file:
-        instituicoesEnsinoJson = json.load(file)
+    # IE no formato JSON lido do arquivo.
+    with open('data/instituicoesensino.json', 'r') as f:
+        instituicoesEnsinoJson = json.load(f)
 
+    # Conversão para o objeto de InstituicaoEnsino.
     for instituicaoEnsinoJson in instituicoesEnsinoJson:
-        ie = InstituicaoEnsino(
-            instituicaoEnsinoJson['CODIGO_DA_IES'],
-            instituicaoEnsinoJson['NOME_DA_IES'],
-            instituicaoEnsinoJson['SIGLA'],
-            instituicaoEnsinoJson['CATEGORIA_DA_IES'],
-            instituicaoEnsinoJson['COMUNITARIA'],
-            instituicaoEnsinoJson['CONFESSIONAL'],
-            instituicaoEnsinoJson['FILANTROPICA'],
-            instituicaoEnsinoJson['ORGANIZACAO_ACADEMICA'],
-            instituicaoEnsinoJson['CODIGO_MUNICIPIO_IBGE'],
-            instituicaoEnsinoJson['MUNICIPIO'],
-            instituicaoEnsinoJson['UF'],
-            instituicaoEnsinoJson['SITUACAO_IES']
-        )
-        instituicoesEnsino.append(ie.to_json())
+        ie = InstituicaoEnsino(instituicaoEnsinoJson["codigo"],
+                               instituicaoEnsinoJson["nome"],
+                               instituicaoEnsinoJson["co_uf"],
+                               instituicaoEnsinoJson["co_municipio"],
+                               instituicaoEnsinoJson["qt_mat_bas"],
+                               instituicaoEnsinoJson["qt_mat_prof"],
+                               0,
+                               instituicaoEnsinoJson["qt_mat_esp"])
+        instituicoesEnsino.append(ie)
+
     return instituicoesEnsino
 
 
-def loadUsuarios():
-
-    with open('data/usuarios.json', 'r', encoding='utf-8') as file:
-        data = json.load(file)
-        usuarios = [Usuario(item['id'], item['nome'], item['cpf'],
-                            item['data_nascimento']).to_json() for item in data]
-        return usuarios
+getInstituicoesEnsino()

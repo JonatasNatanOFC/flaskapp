@@ -1,22 +1,21 @@
-CREATE TABLE IF NOT EXISTS tb_instituicao (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    codigo_ies INTEGER NOT NULL,
-    nome_ies TEXT NOT NULL,
-    sigla TEXT,
-    categoria_ies TEXT NOT NULL,
-    comunitaria TEXT NOT NULL,
-    confessional TEXT NOT NULL,
-    filantropica TEXT NOT NULL,
-    organizacao_academica TEXT NOT NULL,
-    codigo_municipio_ibge TEXT NOT NULL,
-    municipio TEXT NOT NULL,
-    uf TEXT NOT NULL,
-    situacao_ies TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS tb_usuario (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nome TEXT NOT NULL,
-    cpf TEXT NOT NULL,
-    data_nascimento DATE NOT NULL
+CREATE TABLE IF NOT EXISTS entidades(
+    CO_ENTIDADE INTEGER PRIMARY KEY,
+    CO_REGIAO  INTEGER,
+    NO_REGIAO TEXT,
+    NO_UF TEXT,
+    SG_UF TEXT,
+    NO_MUNICIPIO TEXT,
+    NO_MESORREGIAO TEXT,
+    NO_MICRORREGIAO TEXT,
+    NO_ENTIDADE TEXT,
+    QT_MAT_BAS INTEGER,
+    QT_MAT_INF INTEGER,
+    QT_MAT_FUND INTEGER,
+    QT_MAT_MED INTEGER,
+    QT_MAT_MED_CT INTEGER,
+    QT_MAT_MED_NM INTEGER,
+    QT_MAT_PROF INTEGER,
+    QT_MAT_PROF_TEC INTEGER,
+    QT_MAT_EJA INTEGER,
+    QT_MAT_ESP INTEGER
 );
