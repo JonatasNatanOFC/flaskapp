@@ -1,42 +1,129 @@
 import pandas as pd
 import sqlite3
+import sys
+import os
 
-csv_file = "data/microdados_ed_basica_2024.csv"
+DATABASE_NAME = "censoescolar.db"
+CSV_FILE = os.path.join("data", "microdados_ed_basica_2024.csv")
+SCHEMA_FILE = "schema.sql"
+FILTRO_REGIAO = "NORDESTE"
 
-colList = ['CO_ENTIDADE', 'CO_REGIAO', 'NO_REGIAO', 'NO_UF', 'SG_UF', 'NO_MUNICIPIO', 'NO_MESORREGIAO', 'NO_MICRORREGIAO', 'NO_ENTIDADE',
-           'QT_MAT_BAS', 'QT_MAT_INF', 'QT_MAT_FUND', 'QT_MAT_MED', 'QT_MAT_MED_CT', 'QT_MAT_MED_NM',
-           'QT_MAT_PROF', 'QT_MAT_PROF_TEC', 'QT_MAT_EJA', 'QT_MAT_ESP']
+COLUNAS_PARA_LER = [
+    'CO_ENTIDADE',
+    'NO_MUNICIPIO',
+    'NO_ENTIDADE',
+    'SG_UF',
+    'QT_MAT_BAS',
+    'QT_MAT_INF',
+    'QT_MAT_FUND',
+    'QT_MAT_MED',
+    'QT_MAT_MED_CT',
+    'QT_MAT_MED_NM',
+    'QT_MAT_PROF',
+    'QT_MAT_PROF_TEC',
+    'QT_MAT_EJA',
+    'QT_MAT_ESP',
+    'NO_REGIAO'
+]
+
+COLUNAS_PARA_SALVAR = [
+    'CO_ENTIDADE',
+    'NO_MUNICIPIO',
+    'NO_ENTIDADE',
+    'SG_UF',
+    'QT_MAT_BAS',
+    'QT_MAT_INF',
+    'QT_MAT_FUND',
+    'QT_MAT_MED',
+    'QT_MAT_MED_CT',
+    'QT_MAT_MED_NM',
+    'QT_MAT_PROF',
+    'QT_MAT_PROF_TEC',
+    'QT_MAT_EJA',
+    'QT_MAT_ESP'
+]
 
 
-data = pd.read_csv(csv_file, encoding='latin-1',
-                   delimiter=';', usecols=colList)
-filtro_data = data[data["NO_REGIAO"] == ('Nordeste')].fillna(0)
+def setup_database():
+    print(f"Iniciando configuração do banco: {DATABASE_NAME}")
+    if not os.path.exists(SCHEMA_FILE):
+        print(f"Erro: Arquivo {SCHEMA_FILE} não encontrado.")
+        return False
 
-entidades = filtro_data.to_dict(orient='records')
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    try:
+        with open(SCHEMA_FILE) as f:
+            cursor.executescript(f.read())
+        conn.commit()
+        print("Tabela 'entidades' criada com sucesso.")
+        return True
+    except Exception as e:
+        print(f"Erro ao executar {SCHEMA_FILE}: {e}")
+        conn.rollback()
+        return False
+    finally:
+        conn.close()
 
-entidades_info = [(entidade['CO_ENTIDADE'], entidade['CO_REGIAO'], entidade['NO_REGIAO'], entidade['NO_UF'], entidade['SG_UF'], entidade['NO_MUNICIPIO'],
-                   entidade['NO_MESORREGIAO'], entidade['NO_MICRORREGIAO'], entidade[
-                       'NO_ENTIDADE'], entidade['QT_MAT_BAS'], entidade['QT_MAT_INF'],
-                   entidade['QT_MAT_FUND'], entidade['QT_MAT_MED'], entidade['QT_MAT_MED_CT'], entidade['QT_MAT_MED_NM'], entidade['QT_MAT_PROF'],
-                   entidade['QT_MAT_PROF_TEC'], entidade['QT_MAT_EJA'], entidade['QT_MAT_ESP']
-                   ) for entidade in entidades]
 
-connection = sqlite3.connect('censoescolar.db')
+def populate_data():
+    print(f"Iniciando carga de dados do CSV: {CSV_FILE}")
+    if not os.path.exists(CSV_FILE):
+        print(f"Erro: Arquivo {CSV_FILE} não encontrado.")
+        print("Por favor, baixe o arquivo e coloque-o na pasta 'data'.")
+        return
 
-cursor = connection.cursor()
+    conn = sqlite3.connect(DATABASE_NAME)
+    total_inserido = 0
 
-with open('schema.sql') as file:
-    cursor.executescript(file.read())
+    try:
+        tamanho_chunk = 100000
+
+        csv_iterator = pd.read_csv(
+            CSV_FILE,
+            encoding='latin1',
+            delimiter=';',
+            usecols=COLUNAS_PARA_LER,
+            chunksize=tamanho_chunk
+        )
+
+        print(f"Iniciando filtro para a região: {FILTRO_REGIAO}")
+
+        for i, chunk_df in enumerate(csv_iterator):
+            sys.stdout.write(f"\rProcessando chunk {i+1}...")
+            sys.stdout.flush()
+
+            coluna_filtro_limpa = chunk_df["NO_REGIAO"].str.strip().str.upper()
+
+            chunk_filtrado = chunk_df[coluna_filtro_limpa == FILTRO_REGIAO]
+
+            if not chunk_filtrado.empty:
+
+                chunk_final = chunk_filtrado[COLUNAS_PARA_SALVAR]
+
+                chunk_final = chunk_final.fillna(0)
+
+                chunk_final.to_sql(
+                    'entidades',
+                    conn,
+                    if_exists='append',
+                    index=False
+                )
+                total_inserido += len(chunk_final)
+
+        print(f"\n\nOperação finalizada!")
+        print(
+            f"Foram cadastradas {total_inserido} entidades da região {FILTRO_REGIAO}.")
+
+    except Exception as e:
+        print(f"\nOcorreu um erro durante a carga: {e}")
+        print("Verifique se os nomes em 'COLUNAS_PARA_LER' estão corretos,")
+        print("se o delimitador é ';' e se o encoding 'latin1' é o certo.")
+        conn.rollback()
+    finally:
+        conn.close()
 
 
-cursor.executemany(
-    """insert into entidades(CO_ENTIDADE, CO_REGIAO, NO_REGIAO, NO_UF, SG_UF, NO_MUNICIPIO, 
-    NO_MESORREGIAO, NO_MICRORREGIAO, NO_ENTIDADE, QT_MAT_BAS, QT_MAT_INF, QT_MAT_FUND, QT_MAT_MED, 
-    QT_MAT_MED_CT, QT_MAT_MED_NM, QT_MAT_PROF, QT_MAT_PROF_TEC, QT_MAT_EJA, QT_MAT_ESP)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""", entidades_info)
-
-connection.commit()
-
-connection.close()
-
-print(f"Operação finalizada! Foram cadastradas {len(entidades)} Entidades.")
+if __name__ == "__main__":
+    if setup_database():
+        populate_data()

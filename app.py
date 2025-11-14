@@ -2,20 +2,20 @@ import sqlite3
 from flask import Flask, request, jsonify
 from datetime import datetime
 
-from models.Usuario import Usuario
-from helpers.data import getInstituicoesEnsino
-
 app = Flask(__name__)
-
-usuario = Usuario(1, "João", "00011122233", "2025-10-09")
-usuarios = [usuario]
-
-instituicoesEnsino = getInstituicoesEnsino()
-
 DATABASE_NAME = "censoescolar.db"
 
 
+def get_db_conn():
+    """Cria uma conexão com o banco de dados."""
+    conn = sqlite3.connect(DATABASE_NAME)
+    # Retorna linhas como dicionários (muito mais fácil que índices!)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
 def is_data_valida(data_string):
+    """Verifica se uma data está no formato YYYY-MM-DD."""
     try:
         datetime.strptime(data_string, '%Y-%m-%d')
         return True
@@ -25,89 +25,117 @@ def is_data_valida(data_string):
 
 @app.get("/")
 def index():
-    return '{"versao":"2.0.0"}', 200
+    return jsonify({"versao": "2.0.0"}), 200
+
+# --- Endpoints de Usuários ---
 
 
 @app.get("/usuarios")
 def getUsuarios():
-    return jsonify(usuarios)
+    """Busca todos os usuários no banco de dados."""
+    conn = get_db_conn()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tb_usuario")
+    usuarios = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    return jsonify(usuarios), 200
 
 
 @app.get("/usuarios/<int:id>")
 def getUsuariosById(id: int):
-    return jsonify(usuarios[id])
+    """Busca um usuário específico por ID."""
+    conn = get_db_conn()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tb_usuario WHERE id = ?", (id,))
+    usuario = cursor.fetchone()
+    conn.close()
+
+    if usuario:
+        return jsonify(dict(usuario)), 200
+    else:
+        return jsonify({"mensagem": "Usuário não encontrado"}), 404
 
 
 @app.post("/usuarios")
 def setUsuario():
+    """Cria um novo usuário."""
     usuarioJson = request.get_json()
 
-    # Validação simples sem framework dos dados do usuário.
-    nome = usuarioJson['nome']
-    if (len(nome) <= 0 or (len(nome) > 0 and not (nome.isalpha()))):
-        return {"mensagem": "O nome do usuário é inválido!"}, 400
+    # Validação dos dados
+    nome = usuarioJson.get('nome')
+    # Permite espaços no nome
+    if not nome or not nome.replace(' ', '').isalpha():
+        return jsonify({"mensagem": "O nome do usuário é inválido!"}), 400
 
-    cpf = usuarioJson['cpf']
-    if (len(cpf) == 11):
-        return {"mensagem": "O cpf do usuário é inválido!"}, 400
+    cpf = usuarioJson.get('cpf')
+    if not cpf or len(cpf) != 11 or not cpf.isdigit():  # Deve ter 11 dígitos
+        return jsonify({"mensagem": "O cpf do usuário é inválido!"}), 400
 
-    nascimento = usuarioJson['nascimento']
-    datetime.strptime(nascimento, )
-    if (is_data_valida(nascimento)):
-        return {"mensagem": "A data de nascimento do usuário é inválida!"}, 400
+    nascimento = usuarioJson.get('nascimento')
+    if not is_data_valida(nascimento):  # CORREÇÃO: Lógica invertida
+        return jsonify({"mensagem": "A data de nascimento do usuário é inválida! Use YYYY-MM-DD"}), 400
 
-    # Manipulação com o banco de dados.
-    # conectar com o banco.
-    conn = sqlite3.connect(DATABASE_NAME)
-
-    # capturar o cursor
+    # Manipulação com o banco de dados
+    conn = get_db_conn()
     cursor = conn.cursor()
 
-    # consultar: execução da dml.
-    statement = "INSERT INTO tb_instituicao(nome, cpf, nascimento) values(?, ?, ?)"
-    cursor.execute(statement, (nome, cpf, nascimento))
+    try:
+        # CORREÇÃO: Inserindo na tabela 'tb_usuario'
+        statement = "INSERT INTO tb_usuario(nome, cpf, nascimento) VALUES (?, ?, ?)"
+        cursor.execute(statement, (nome, cpf, nascimento))
+        conn.commit()
 
-    id = cursor.lastrowid
+        id_criado = cursor.lastrowid
+        usuarioJson.update({"id": id_criado})
 
-    # Commit - Confirma transação.
-    cursor.commit()
+        return jsonify(usuarioJson), 201
 
-    # Adicionar id do registro criado ao usuário de rotorno.
-    usuarioJson.update({"id": id})
+    except sqlite3.IntegrityError:
+        # Isso acontece se o CPF for duplicado
+        return jsonify({"mensagem": "Erro: CPF já cadastrado."}), 409
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"mensagem": f"Erro interno: {e}"}), 500
+    finally:
+        conn.close()
 
-    return usuario, 201
+# --- Endpoints das Instituições de Ensino ---
 
 
 @app.get("/instituicoesensino")
 def getInstituicoesEnsino():
-    # conectar com o banco.
-    conn = sqlite3.connect(DATABASE_NAME)
-
-    # capturar o cursor
+    """Busca todas as instituições no banco (usando o row_factory)."""
+    conn = get_db_conn()
     cursor = conn.cursor()
 
-    # consultar: execução da dml.
-    statement = "SELECT * FROM tb_instituicao"
-    cursor.execute(statement)
+    # Paginação simples (opcional, mas recomendado)
+    page = request.args.get('page', 1, type=int)
+    limit = request.args.get('limit', 50, type=int)
+    offset = (page - 1) * limit
 
-    # fetch
-    resultset = cursor.fetchall()
+    cursor.execute("SELECT * FROM entidades LIMIT ? OFFSET ?", (limit, offset))
 
-    instituicaoEnsinoResponse = []
-    for row in resultset:
-        id = row[0]
-        codigo = row[1]
-        nome = row[2]
-        instituicaoEnsino = {"id": id, "codigo": codigo, "nome": nome}
-        instituicaoEnsinoResponse.append(instituicaoEnsino)
+    # Converte o resultado para uma lista de dicionários
+    entidades = [dict(row) for row in cursor.fetchall()]
 
-    # fechar a conexão
     conn.close()
-
-    return instituicaoEnsinoResponse, 200
+    return jsonify(entidades), 200
 
 
 @app.get("/instituicoesensino/<int:id>")
 def getInstituicoesEnsinoById(id: int):
-    ieDict = instituicoesEnsino[id].to_json()
-    return jsonify(ieDict), 200
+    """Busca uma instituição específica pelo CO_ENTIDADE."""
+    conn = get_db_conn()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM entidades WHERE CO_ENTIDADE = ?", (id,))
+    entidade = cursor.fetchone()
+    conn.close()
+
+    if entidade:
+        return jsonify(dict(entidade)), 200
+    else:
+        return jsonify({"mensagem": "Instituição não encontrada"}), 404
+
+
+if __name__ == '__main__':
+    app.run(debug=True)

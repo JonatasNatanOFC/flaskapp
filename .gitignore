@@ -2,3 +2,5 @@ venv
 *.pyc
 **/*.pyc
 *.csv
+*.db
+censoescolar.db
