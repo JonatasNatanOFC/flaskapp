@@ -1,3 +1,7 @@
+from marshmallow import Schema, fields, validate
+
+
+
 class Usuario():
     def __init__(self, id, nome, cpf, nascimento):
         self.id = id
@@ -10,6 +14,15 @@ class Usuario():
 
     def to_json(self):
         return {"id": self.id, "nome": self.nome, "cpf": self.cpf, "nascimento": self.nascimento}
+
+
+class UsuarioSchema(Schema):
+    nome = fields.String(validate=validate.Length(min=2, max=255), required=True, error_messages={
+                         "required": "O Nome do Usuário é Obrigatório.", "length": "Tamanho Inválido."})
+    cpf = fields.String(validate=validate.Length(min=11, max=11), required=True, error_messages={
+                        "required": "O CPF do Usuário é Obrigatório.", "length": "Tamanho Inválido."})
+    nascimento = fields.Date(required=True, error_messages={
+        "required": "A Data de Nascimento do Usuário é Obrigatória.", "invalid": "Formato de Data Inválido."})
 
 
 print(__name__)
