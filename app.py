@@ -20,7 +20,6 @@ def is_data_valida(data_string):
         datetime.strptime(data_string, '%Y-%m-%d')
         return True
     except ValueError:
-        logger.warning(f"Data inválida recebida: {data_string}")
         return False
 
 
@@ -153,6 +152,28 @@ def getInstituicoesEnsinoById(id: int):
         return jsonify(dict(entidade)), 200
     logger.warning(f"Instituição de ensino não encontrada: {id}")
     return jsonify({"mensagem": "Instituição não encontrada"}), 404
+
+
+@app.get("/instituicoesensino/ranking/<int:ano>")
+def getRankingInstituicoesEnsino(ano: int):
+    logger.info(f"GET - /instituicoesensino/ranking/{ano}")
+    conn = get_db_conn()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            SELECT NU_RANKING ,NO_ENTIDADE, CO_ENTIDADE, QT_MAT_TOTAL AS total_matriculas
+            FROM entidades
+            WHERE NU_ANO_CENSO = ?
+            ORDER BY total_matriculas DESC
+            LIMIT 10
+        """, (ano,))
+        ranking = [dict(row) for row in cursor.fetchall()]
+        return jsonify(ranking), 200
+    except Exception as e:
+        logger.error(f"Erro ao buscar ranking de instituições: {str(e)}")
+        return jsonify({"erro": str(e)}), 500
+    finally:
+        conn.close()
 
 
 if __name__ == '__main__':

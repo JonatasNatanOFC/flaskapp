@@ -1,7 +1,31 @@
-2025-11-27 08:05:39,234 - INFO - GET - /usuarios
-2025-11-27 08:08:53,487 - INFO - GET - /instituicoesensino
-2025-11-27 08:09:39,980 - INFO - POST - /instituicoesensino
-2025-11-27 08:09:39,981 - WARNING - Nome da instituição não fornecido na requisição.
-2025-11-27 08:10:30,023 - INFO - GET - /usuarios/80
-2025-11-27 08:10:30,024 - WARNING - Usuário não encontrado: 80
-2025-11-27 08:11:12,577 - INFO - GET - /usuarios/4
+2025-11-27 14:06:44,253 - INFO - GET - /usuarios/4
+2025-11-27 14:07:14,322 - INFO - POST - /usuarios
+2025-11-27 14:07:14,325 - WARNING - Data inválida recebida: 2004-25-11
+2025-11-27 14:07:14,325 - WARNING - Data de nascimento inválida fornecida: 2004-25-11
+2025-11-27 14:07:36,757 - INFO - POST - /usuarios
+2025-11-27 14:07:36,758 - ERROR - CPF já cadastrado: 12345678132
+2025-11-27 14:07:52,219 - INFO - POST - /usuarios
+2025-11-27 14:08:03,113 - INFO - GET - /usuarios/5
+2025-11-27 14:08:10,775 - INFO - POST - /usuarios
+2025-11-27 14:08:10,775 - WARNING - Nome do usuário não fornecido na requisição.
+2025-11-27 14:08:21,246 - INFO - GET - /instituicoesensino
+2025-11-27 14:08:26,425 - INFO - GET - /instituicoesensino
+2025-11-27 15:47:08,866 - INFO - GET - /instituicoesensino/ranking/2024
+2025-11-27 15:47:16,053 - INFO - GET - /instituicoesensino/ranking/2023
+2025-11-27 15:47:21,453 - INFO - GET - /instituicoesensino/ranking/2021
+2025-11-27 15:48:57,313 - INFO - GET - /instituicoesensino/ranking/2000
+2025-11-27 15:51:53,347 - INFO - GET - /instituicoesensino/ranking/2000
+2025-11-27 22:02:10,370 - INFO - GET - /instituicoesensino/ranking/2024
+2025-11-27 22:02:17,312 - INFO - GET - /instituicoesensino/ranking/2023
+2025-11-27 22:02:20,916 - INFO - GET - /instituicoesensino/ranking/2022
+2025-11-27 22:02:23,637 - INFO - GET - /instituicoesensino/ranking/2021
+2025-11-27 22:04:59,781 - INFO - GET - /instituicoesensino/ranking/2023
+2025-11-27 22:04:59,782 - ERROR - Erro ao buscar ranking de instituições: no such column: NU_
+2025-11-27 22:05:15,355 - INFO - GET - /instituicoesensino/ranking/2023
+2025-11-27 22:06:20,939 - INFO - GET - /instituicoesensino/ranking/2023
+2025-11-27 22:06:58,363 - INFO - GET - /instituicoesensino/ranking/2023
+2025-11-27 22:07:27,956 - INFO - GET - /instituicoesensino/ranking/2023
+2025-11-27 22:08:29,924 - INFO - GET - /instituicoesensino/ranking/2024
+2025-11-27 22:09:51,753 - INFO - GET - /instituicoesensino/ranking/2024
+2025-11-27 22:10:00,270 - INFO - GET - /instituicoesensino/ranking/2023
+2025-11-27 22:10:06,440 - INFO - GET - /instituicoesensino/ranking/2022
