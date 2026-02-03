@@ -29,3 +29,39 @@
 2025-11-27 22:09:51,753 - INFO - GET - /instituicoesensino/ranking/2024
 2025-11-27 22:10:00,270 - INFO - GET - /instituicoesensino/ranking/2023
 2025-11-27 22:10:06,440 - INFO - GET - /instituicoesensino/ranking/2022
+2025-12-08 07:34:59,919 - INFO - GET - /instituicoesensino
+2025-12-08 07:36:49,432 - INFO - GET - /instituicoesensino
+2026-02-03 10:09:54,481 - INFO - get - /usuario/1
+2026-02-03 10:09:54,505 - ERROR - An SQL error occurred: relation "tb_usuario" does not exist
+LINE 1: SELECT * FROM tb_usuario WHERE id = 1
+                      ^
+
+2026-02-03 15:54:44,679 - INFO - get - /instituicoesensino
+2026-02-03 15:54:46,843 - INFO - get - /instituicoesensino
+2026-02-03 15:54:57,534 - INFO - get - /usuario/5
+2026-02-03 15:55:02,062 - INFO - get - /usuarios
+2026-02-03 15:55:09,729 - INFO - get - /usuarios
+2026-02-03 15:55:09,740 - INFO - Natan - 12345678892 - 2004-02-11
+2026-02-03 15:55:16,400 - INFO - get - /usuario/5
+2026-02-03 15:55:18,878 - INFO - get - /usuario/2
+2026-02-03 15:57:04,395 - INFO - put - /usuario/2
+2026-02-03 15:57:04,412 - INFO - Gustavo - 12345678892 - 2004-02-11
+2026-02-03 15:57:08,360 - INFO - get - /usuario/2
+2026-02-03 15:57:44,430 - INFO - get - /usuarios
+2026-02-03 15:57:44,444 - INFO - Natan - 12345678892 - 2004-02-11
+2026-02-03 15:57:48,066 - INFO - get - /usuario/2
+2026-02-03 15:57:50,913 - INFO - get - /usuarios
+2026-02-03 15:58:11,937 - INFO - get - /usuario/2
+2026-02-03 15:58:15,856 - INFO - get - /usuarios
+2026-02-03 15:58:17,659 - INFO - get - /usuarios
+2026-02-03 15:58:18,443 - INFO - get - /usuarios
+2026-02-03 15:58:21,397 - INFO - get - /usuario/2
+2026-02-03 15:58:27,204 - INFO - delete - /usuario/2
+2026-02-03 15:58:30,786 - INFO - get - /usuarios
+2026-02-03 16:02:47,196 - INFO - get - /instituicoesensino
+2026-02-03 16:02:48,227 - INFO - get - /instituicoesensino
+2026-02-03 16:20:49,238 - INFO - get - /usuarios
+2026-02-03 16:22:27,336 - INFO - get - /usuario/1
+2026-02-03 16:22:31,801 - INFO - get - /usuario/5
+2026-02-03 16:26:22,856 - INFO - get - /usuarios
+2026-02-03 16:26:26,004 - INFO - get - /usuarios
