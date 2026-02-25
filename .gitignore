@@ -3,4 +3,8 @@ venv
 **/*.pyc
 *.csv
 *.db
+<<<<<<< HEAD
 censoescolar.db
+=======
+censoescolar.db
+>>>>>>> parent of 1fb7e74 (:sparkles: feat: Feito ranking dos ultimos 3 anos)
