@@ -28,14 +28,11 @@ def create_tables():
         conn.commit()
 
     except OperationalError as e:
-        # Handle the error, print details, or log the error
         print(f"The connection failed: {e}")
-        # Optional: Get the PostgreSQL error code
         if hasattr(e, 'pgcode'):
             print(f"PostgreSQL Error Code: {e.pgcode}")
 
     except psycopg2.Error as e:
-        # Catch any other general psycopg2 errors
         print(f"A general psycopg2 error occurred: {e}")
 
     finally:

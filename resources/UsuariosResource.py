@@ -1,172 +1,95 @@
 from flask import request
 from flask_restful import Resource
 from psycopg2 import Error
+from psycopg2.extras import RealDictCursor
 from marshmallow import ValidationError
 
 from helpers.logging import logger
 from helpers.database import get_conn
-from models.Usuario import UsuarioSchema
+from models.Usuario import UsuarioSchema, Usuario
 Resource
 
 
 class UsuariosResource(Resource):
     def get(self):
         logger.info("get - /usuarios")
+        conn = None
         try:
-            # conectar com o banco.
             conn = get_conn()
-
-            # capturar o cursor
-            cursor = conn.cursor()
-
-            # consultar: execução da dml.
-            statement = "SELECT * FROM tb_usuario"
-            cursor.execute(statement)
-
-            # fetch
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute("SELECT id, nome, cpf, nascimento FROM tb_usuario")
             resultset = cursor.fetchall()
 
-            usuariosEnsinoResponse = []
-            for row in resultset:
-                id = row[0]
-                codigo = row[1]
-                nome = row[2]
-
-                instituicaoEnsino = {"id": id, "codigo": codigo, "nome": nome}
-
-                usuariosEnsinoResponse.append(instituicaoEnsino)
-
-            return usuariosEnsinoResponse, 200
+            # Serializa a lista de dicionários (resolve o erro da data)
+            schema = UsuarioSchema(many=True)
+            return schema.dump(resultset), 200
 
         except Error as e:
-            logger.error(f"An SQL error occurred: {e}")
+            logger.error(f"Erro SQL: {e}")
             return {"mensagem": "Problema na operação com os dados"}, 500
+        finally:
+            if conn:
+                conn.close()
 
     def post(self):
-        logger.info("get - /usuarios")
+        logger.info("post - /usuarios")
+        conn = None
         try:
-            usuarioJson = request.get_json()
+            usuario_json = request.get_json()
+            data = UsuarioSchema().load(usuario_json)
 
-            usuarioSchema = UsuarioSchema()
-
-            usuarioData = usuarioSchema.load(usuarioJson)
-
-            # Manipulação com o banco de dados.
-            # conectar com o banco.
             conn = get_conn()
-
-            # capturar o cursor
             cursor = conn.cursor()
 
-            nome = usuarioData['nome']
-            cpf = usuarioData['cpf']
-            nascimento = usuarioData['nascimento']
-            logger.info(f"{nome} - {cpf} - {nascimento}")
+            query = "INSERT INTO tb_usuario (nome, cpf, nascimento) VALUES (%s, %s, %s) RETURNING id"
+            cursor.execute(
+                query, (data['nome'], data['cpf'], data['nascimento']))
 
-            # consultar: execução da dml.
-            statement = "INSERT INTO tb_usuario (nome, cpf, nascimento) VALUES (%s, %s, %s) RETURNING id;"
-
-            valores = (nome, cpf, nascimento)
-            cursor.execute(statement, valores)
-
-            # id = cursor.lastrowid
-            row = cursor.fetchone()
-            id = row[0]
-
+            new_id = cursor.fetchone()[0]
             conn.commit()
 
-            # Adicionar id do registro criado ao usuário de rotorno.
-            usuarioJson.update({"id": id})
-
-            return usuarioJson, 201
+            data['id'] = new_id
+            return data, 201
 
         except ValidationError as err:
             return err.messages, 400
         except Error as e:
-            logger.error(f"An SQLite error occurred: {e}")
-            return {"mensagem": "Problema na operação com os dados"}, 500
+            logger.error(f"Erro SQL: {e}")
+            return {"mensagem": "Erro ao inserir"}, 500
+        finally:
+            if conn:
+                conn.close()
 
 
 class UsuarioResource(Resource):
     def get(self, id):
-        logger.info(f"get - /usuario/{id}")
+        conn = None
         try:
-            # conectar com o banco.
             conn = get_conn()
-
-            # capturar o cursor
-            cursor = conn.cursor()
-
-            # consultar: execução da dml.
-            statement = f"SELECT * FROM tb_usuario WHERE id = {id}"
-            cursor.execute(statement)
-
-            # fetch
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute("SELECT * FROM tb_usuario WHERE id = %s", (id,))
             row = cursor.fetchone()
 
-            if row:
-                id = row[0]
-                codigo = row[1]
-                nome = row[2]
+            if not row:
+                return {"mensagem": "Não encontrado"}, 404
 
-                instituicaoEnsino = {"id": id, "codigo": codigo, "nome": nome}
-            else:
-                return {"mensagem": "Não encontrado!"}, 404
-
-            return instituicaoEnsino, 200
-
+            return UsuarioSchema().dump(row), 200
         except Error as e:
-            logger.error(f"An SQL error occurred: {e}")
-            return {"mensagem": "Problema na operação com os dados"}, 500
+            return {"mensagem": str(e)}, 500
+        finally:
+            if conn:
+                conn.close()
 
-    # TODO: Implementar
-    def put(self, id):
-        logger.info(f"put - /usuario/{id}")
-        try:
-            usuarioJson = request.get_json()
-
-            usuarioSchema = UsuarioSchema()
-
-            usuarioData = usuarioSchema.load(usuarioJson)
-
-            # Manipulação com o banco de dados.
-            # conectar com o banco.
-            conn = get_conn()
-
-            # capturar o cursor
-            cursor = conn.cursor()
-
-            nome = usuarioData['nome']
-            cpf = usuarioData['cpf']
-            nascimento = usuarioData['nascimento']
-            logger.info(f"{nome} - {cpf} - {nascimento}")
-
-            # consultar: execução da dml.
-            statement = f"UPDATE tb_usuario SET nome = %s, cpf = %s, nascimento = %s WHERE id = {id};"
-            valores = (nome, cpf, nascimento)
-            cursor.execute(statement, valores)
-            conn.commit()
-            return usuarioJson, 200
-        except Error as e:
-            logger.error(f"An SQL error occurred: {e}")
-            return {"mensagem": "Problema na operação com os dados"}, 500
-
-    # TODO: Implementar
     def delete(self, id):
-        logger.info(f"delete - /usuario/{id}")
+        conn = None
         try:
-            # Manipulação com o banco de dados.
-            # conectar com o banco.
             conn = get_conn()
-
-            # capturar o cursor
             cursor = conn.cursor()
-
-            # consultar: execução
-            statement = f"DELETE FROM tb_usuario WHERE id = {id};"
-            cursor.execute(statement)
+            cursor.execute("DELETE FROM tb_usuario WHERE id = %s", (id,))
             conn.commit()
-            return {"mensagem": "Registro excluído com sucesso!"}, 200
+            return {"mensagem": "Excluído!"}, 200
         except Error as e:
-            logger.error(f"An SQL error occurred: {e}")
-            return {"mensagem": "Problema na operação com os dados"}, 500
+            return {"mensagem": str(e)}, 500
+        finally:
+            if conn:
+                conn.close()

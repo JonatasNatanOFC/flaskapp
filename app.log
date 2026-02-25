@@ -65,3 +65,41 @@ LINE 1: SELECT * FROM tb_usuario WHERE id = 1
 2026-02-03 16:22:31,801 - INFO - get - /usuario/5
 2026-02-03 16:26:22,856 - INFO - get - /usuarios
 2026-02-03 16:26:26,004 - INFO - get - /usuarios
+2026-02-05 10:42:38,618 - INFO - get - /usuario/5
+2026-02-05 10:42:43,194 - INFO - get - /usuarios
+2026-02-05 10:56:35,264 - INFO - get - /instituicoesensino
+2026-02-05 10:59:54,646 - INFO - get - /instituicoesensino
+2026-02-05 11:00:15,499 - INFO - get - /instituicoesensino
+2026-02-05 15:46:55,448 - INFO - get - /usuarios
+2026-02-05 15:48:27,595 - INFO - get - /usuarios
+2026-02-05 15:48:49,749 - INFO - get - /instituicoes-ensino
+2026-02-05 15:48:49,792 - ERROR - SQL Error: relation "tb_instituicao_ensino" does not exist
+LINE 1: SELECT id, codigo, nome FROM tb_instituicao_ensino
+                                     ^
+
+2026-02-05 15:50:14,583 - INFO - get - /instituicoesensino
+2026-02-05 15:55:46,635 - INFO - get - /instituicoesensino
+2026-02-05 15:55:50,619 - INFO - get - /instituicoesensino
+2026-02-05 15:55:51,734 - INFO - get - /instituicoesensino
+2026-02-05 15:55:51,743 - INFO - get - /instituicoesensino
+2026-02-05 15:56:19,185 - INFO - get - /instituicoesensino/1
+2026-02-05 15:56:28,046 - INFO - get - /instituicoesensino
+2026-02-05 15:56:36,944 - INFO - get - /instituicoesensino
+2026-02-05 16:04:16,508 - INFO - get - /instituicoesensino
+2026-02-05 16:04:19,918 - INFO - get - /instituicoesensino
+2026-02-05 16:04:20,954 - INFO - get - /instituicoesensino
+2026-02-05 16:04:21,776 - INFO - get - /instituicoesensino
+2026-02-05 16:04:22,476 - INFO - get - /instituicoesensino
+2026-02-05 16:04:27,826 - INFO - get - /instituicoesensino
+2026-02-05 16:04:29,476 - INFO - get - /instituicoesensino
+2026-02-05 16:04:30,442 - INFO - get - /instituicoesensino
+2026-02-05 16:04:31,080 - INFO - get - /instituicoesensino
+2026-02-05 16:04:37,943 - INFO - get - /instituicoesensino
+2026-02-05 16:04:38,942 - INFO - get - /instituicoesensino
+2026-02-05 16:04:40,687 - INFO - get - /instituicoesensino
+2026-02-05 16:04:41,536 - INFO - get - /instituicoesensino
+2026-02-06 07:53:59,178 - INFO - get - /instituicoesensino
+2026-02-06 07:54:06,189 - INFO - get - /usuarios
+2026-02-06 07:58:22,132 - INFO - get - /usuarios
+2026-02-06 07:58:23,010 - INFO - get - /usuarios
+2026-02-06 08:00:27,476 - INFO - get - /instituicoesensino
