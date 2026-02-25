@@ -41,5 +41,8 @@ CREATE TABLE tb_usuario (
     nome TEXT NOT NULL,
     cpf TEXT UNIQUE NOT NULL,
     nascimento TEXT
+<<<<<<< HEAD
+>>>>>>> parent of 1fb7e74 (:sparkles: feat: Feito ranking dos ultimos 3 anos)
+=======
 >>>>>>> parent of 1fb7e74 (:sparkles: feat: Feito ranking dos ultimos 3 anos)
 );

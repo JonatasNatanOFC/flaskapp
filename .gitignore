@@ -4,7 +4,11 @@ venv
 *.csv
 *.db
 <<<<<<< HEAD
+<<<<<<< HEAD
 censoescolar.db
+=======
+censoescolar.db
+>>>>>>> parent of 1fb7e74 (:sparkles: feat: Feito ranking dos ultimos 3 anos)
 =======
 censoescolar.db
 >>>>>>> parent of 1fb7e74 (:sparkles: feat: Feito ranking dos ultimos 3 anos)

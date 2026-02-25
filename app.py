@@ -12,9 +12,6 @@ api.add_resource(UsuariosResource, '/usuarios')
 api.add_resource(UsuarioResource, '/usuarios/<string:id>')
 
 
-<<<<<<< HEAD
-# TODO: Implementar a migração para flask-restful
-=======
 def get_db_conn():
     conn = sqlite3.connect(DATABASE_NAME)
     conn.row_factory = sqlite3.Row
@@ -112,7 +109,6 @@ def setUsuario():
         return jsonify({"mensagem": f"Erro interno: {str(e)}"}), 500
     finally:
         conn.close()
->>>>>>> parent of 1fb7e74 (:sparkles: feat: Feito ranking dos ultimos 3 anos)
 
 
 @app.get("/instituicoesensino")
@@ -152,9 +148,6 @@ def getInstituicoesEnsino():
 
 @app.get("/instituicoesensino/<int:id>")
 def getInstituicoesEnsinoById(id: int):
-<<<<<<< HEAD
-    return {}, 501
-=======
     logger.info(f"GET - /instituicoesensino/{id}")
     conn = get_db_conn()
     cursor = conn.cursor()
@@ -170,4 +163,3 @@ def getInstituicoesEnsinoById(id: int):
 
 if __name__ == '__main__':
     app.run(debug=True)
->>>>>>> parent of 1fb7e74 (:sparkles: feat: Feito ranking dos ultimos 3 anos)
