@@ -1,15 +1,12 @@
 import sqlite3
+from flask import Flask, request, jsonify
+from datetime import datetime
 
-from helpers.application import app, api
-from helpers.database import get_conn
 from helpers.logging import logger
 
-from resources.HomeResource import HomeResources
-from resources.UsuariosResource import UsuariosResource, UsuarioResource
 
-api.add_resource(HomeResources, '/')
-api.add_resource(UsuariosResource, '/usuarios')
-api.add_resource(UsuarioResource, '/usuarios/<string:id>')
+app = Flask(__name__)
+DATABASE_NAME = "censoescolar.db"
 
 
 def get_db_conn():
@@ -23,7 +20,6 @@ def is_data_valida(data_string):
         datetime.strptime(data_string, '%Y-%m-%d')
         return True
     except ValueError:
-        logger.warning(f"Data inválida recebida: {data_string}")
         return False
 
 
@@ -113,37 +109,34 @@ def setUsuario():
 
 @app.get("/instituicoesensino")
 def getInstituicoesEnsino():
+    logger.info("GET - /instituicoesensino")
 
-    logger.info("get - /instituicoesensino")
+    conn = get_db_conn()
+    cursor = conn.cursor()
+
     try:
-        # conectar com o banco.
-        conn = get_conn()
+        page = request.args.get('page', 1, type=int)
+        limit = request.args.get('limit', 50, type=int)
 
-        # capturar o cursor
-        cursor = conn.cursor()
+        if limit > 1000:
+            limit = 1000
 
-        # consultar: execução da dml.
-        statement = "SELECT * FROM tb_instituicao"
-        cursor.execute(statement)
+        offset = (page - 1) * limit
 
-        # fetch
-        resultset = cursor.fetchall()
+        cursor.execute(
+            "SELECT * FROM entidades LIMIT ? OFFSET ?", (limit, offset))
+        entidades = [dict(row) for row in cursor.fetchall()]
 
-        instituicoesEnsinoResponse = []
-        for row in resultset:
-            id = row["id"]
-            codigo = row["codigo"]
-            nome = row["nome"]
-            instituicaoEnsino = {"id": id, "codigo": codigo, "nome": nome}
-            instituicoesEnsinoResponse.append(instituicaoEnsino)
-
-        return instituicoesEnsinoResponse, 200
-
-    except sqlite3.Error as e:
-        logger.error(f"An SQLite error occurred: {e}")
-        return {"mensagem": "Problema na operação com os dados"}, 500
-
-# TODO: Implementar a migração para flask-restful
+        return jsonify({
+            "pagina_atual": page,
+            "itens_por_pagina": limit,
+            "dados": entidades
+        }), 200
+    except Exception as e:
+        logger.error(f"Erro ao buscar instituições de ensino: {str(e)}")
+        return jsonify({"erro": str(e)}), 500
+    finally:
+        conn.close()
 
 
 @app.get("/instituicoesensino/<int:id>")
@@ -159,6 +152,28 @@ def getInstituicoesEnsinoById(id: int):
         return jsonify(dict(entidade)), 200
     logger.warning(f"Instituição de ensino não encontrada: {id}")
     return jsonify({"mensagem": "Instituição não encontrada"}), 404
+
+
+@app.get("/instituicoesensino/ranking/<int:ano>")
+def getRankingInstituicoesEnsino(ano: int):
+    logger.info(f"GET - /instituicoesensino/ranking/{ano}")
+    conn = get_db_conn()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            SELECT NU_RANKING ,NO_ENTIDADE, CO_ENTIDADE, QT_MAT_TOTAL AS total_matriculas
+            FROM entidades
+            WHERE NU_ANO_CENSO = ?
+            ORDER BY total_matriculas DESC
+            LIMIT 10
+        """, (ano,))
+        ranking = [dict(row) for row in cursor.fetchall()]
+        return jsonify(ranking), 200
+    except Exception as e:
+        logger.error(f"Erro ao buscar ranking de instituições: {str(e)}")
+        return jsonify({"erro": str(e)}), 500
+    finally:
+        conn.close()
 
 
 if __name__ == '__main__':

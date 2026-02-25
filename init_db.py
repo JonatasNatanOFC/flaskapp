@@ -1,244 +1,151 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-import psycopg2
-from psycopg2 import OperationalError
-
-DATABASE_NAME = "censoescolar.db"
-=======
 import pandas as pd
 import sqlite3
-import sys
+import glob
 import os
-import json
 
 DATABASE_NAME = "censoescolar.db"
-=======
-import pandas as pd
-import sqlite3
-import sys
-import os
-import json
-
-DATABASE_NAME = "censoescolar.db"
->>>>>>> parent of 1fb7e74 (:sparkles: feat: Feito ranking dos ultimos 3 anos)
-
-# Caminhos dos arquivos
-CSV_FILE = os.path.join("data", "microdados_ed_basica_2024.csv")
-JSON_FILE = os.path.join("data", "instituicoesensino.json")
 SCHEMA_FILE = "schema.sql"
 
-FILTRO_REGIAO = "NORDESTE"
-
-COLUNAS_PARA_LER = [
-    'CO_ENTIDADE', 'NO_MUNICIPIO', 'NO_ENTIDADE', 'SG_UF',
-    'QT_MAT_BAS', 'QT_MAT_INF', 'QT_MAT_FUND', 'QT_MAT_MED',
-    'QT_MAT_MED_CT', 'QT_MAT_MED_NM', 'QT_MAT_PROF',
-    'QT_MAT_PROF_TEC', 'QT_MAT_EJA', 'QT_MAT_ESP', 'NO_REGIAO'
+COLUNAS_DESEJADAS = [
+    'NO_ENTIDADE', 'CO_ENTIDADE', 'NO_UF', 'SG_UF', 'CO_UF', 'NO_MUNICIPIO', 'CO_MUNICIPIO',
+    'NO_MESORREGIAO', 'CO_MESORREGIAO', 'NO_MICRORREGIAO', 'CO_MICRORREGIAO', 'NU_ANO_CENSO',
+    'NO_REGIAO', 'CO_REGIAO', 'QT_MAT_BAS', 'QT_MAT_PROF', 'QT_MAT_EJA', 'QT_MAT_ESP',
+    'QT_MAT_FUND', 'QT_MAT_INF', 'QT_MAT_MED', 'QT_MAT_ZR_NA', 'QT_MAT_ZR_RUR', 'QT_MAT_ZR_URB'
 ]
 
-COLUNAS_DB = [
-    'CO_ENTIDADE', 'NO_MUNICIPIO', 'NO_ENTIDADE', 'SG_UF',
-    'QT_MAT_BAS', 'QT_MAT_INF', 'QT_MAT_FUND', 'QT_MAT_MED',
-    'QT_MAT_MED_CT', 'QT_MAT_MED_NM', 'QT_MAT_PROF',
-    'QT_MAT_PROF_TEC', 'QT_MAT_EJA', 'QT_MAT_ESP'
+COLUNAS_BASE_DB = [
+    'NO_ENTIDADE', 'CO_ENTIDADE', 'NO_UF', 'SG_UF', 'CO_UF', 'NO_MUNICIPIO', 'CO_MUNICIPIO',
+    'NO_MESORREGIAO', 'CO_MESORREGIAO', 'NO_MICRORREGIAO', 'CO_MICRORREGIAO', 'NU_ANO_CENSO',
+    'NO_REGIAO', 'CO_REGIAO', 'QT_MAT_BAS', 'QT_MAT_PROF', 'QT_MAT_EJA', 'QT_MAT_ESP',
+    'QT_MAT_FUND', 'QT_MAT_INF', 'QT_MAT_MED', 'QT_MAT_ZR_NA', 'QT_MAT_ZR_RUR', 'QT_MAT_ZR_URB'
 ]
->>>>>>> parent of 1fb7e74 (:sparkles: feat: Feito ranking dos ultimos 3 anos)
 
 
-def create_tables():
-    try:
-        print("Iniciando criação")
-
-<<<<<<< HEAD
-        conn = psycopg2.connect(
-            dbname="censoescolar",
-            user="pweb2",
-            password="123456",
-            host="localhost",
-            port="5434"
-=======
-
-def populate_from_json():
-    print(f"\n--- Iniciando carga via JSON: {JSON_FILE} ---")
-    if not os.path.exists(JSON_FILE):
-        print(f"Arquivo JSON não encontrado em {JSON_FILE}. Pulando etapa.")
-        return
-
+def setup_database():
+    print(f"--- Configurando Banco de Dados: {DATABASE_NAME} ---")
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
 
+    if not os.path.exists(SCHEMA_FILE):
+        print(f"Erro: {SCHEMA_FILE} não encontrado.")
+        return False
+
     try:
-        with open(JSON_FILE, 'r', encoding='utf-8') as f:
-            dados_json = json.load(f)
-
-        contador = 0
-        for item in dados_json:
-            cursor.execute("""
-                INSERT OR IGNORE INTO entidades (
-                    CO_ENTIDADE, NO_ENTIDADE, SG_UF, NO_MUNICIPIO, 
-                    QT_MAT_BAS, QT_MAT_PROF, QT_MAT_EJA, QT_MAT_ESP
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                item.get("codigo"),
-                item.get("nome"),
-                item.get("co_uf"),
-                item.get("co_municipio"),
-                item.get("qt_mat_bas", 0),
-                item.get("qt_mat_prof", 0),
-                item.get("qt_mat_eja", 0),
-                item.get("qt_mat_esp", 0)
-            ))
-            contador += 1
-
+        with open(SCHEMA_FILE, 'r') as f:
+            cursor.executescript(f.read())
         conn.commit()
-        print(f"Sucesso: {contador} registros inseridos via JSON.")
-
+        print("Tabelas recriadas com sucesso.")
+        return True
     except Exception as e:
-        print(f"Erro na carga JSON: {e}")
-        conn.rollback()
+        print(f"Erro ao criar tabelas: {e}")
+        return False
     finally:
         conn.close()
 
 
-<<<<<<< HEAD
-def populate_from_csv():
-    print(f"\n--- Iniciando carga via CSV: {CSV_FILE} ---")
-    if not os.path.exists(CSV_FILE):
-        print("CSV não encontrado. Se quiser carga massiva, adicione o arquivo na pasta data/.")
+def populate_from_csv(arquivo):
+    print(f"\n--- Processando: {arquivo} ---")
+    if not os.path.exists(arquivo):
         return
-
-=======
-def populate_from_json():
-    print(f"\n--- Iniciando carga via JSON: {JSON_FILE} ---")
-    if not os.path.exists(JSON_FILE):
-        print(f"Arquivo JSON não encontrado em {JSON_FILE}. Pulando etapa.")
-        return
-
-    conn = sqlite3.connect(DATABASE_NAME)
-    cursor = conn.cursor()
 
     try:
-        with open(JSON_FILE, 'r', encoding='utf-8') as f:
-            dados_json = json.load(f)
-
-        contador = 0
-        for item in dados_json:
-            cursor.execute("""
-                INSERT OR IGNORE INTO entidades (
-                    CO_ENTIDADE, NO_ENTIDADE, SG_UF, NO_MUNICIPIO, 
-                    QT_MAT_BAS, QT_MAT_PROF, QT_MAT_EJA, QT_MAT_ESP
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                item.get("codigo"),
-                item.get("nome"),
-                item.get("co_uf"),
-                item.get("co_municipio"),
-                item.get("qt_mat_bas", 0),
-                item.get("qt_mat_prof", 0),
-                item.get("qt_mat_eja", 0),
-                item.get("qt_mat_esp", 0)
-            ))
-            contador += 1
-
-        conn.commit()
-        print(f"Sucesso: {contador} registros inseridos via JSON.")
-
+        df_head = pd.read_csv(arquivo, encoding='latin1', sep=';', nrows=0)
+        sep_usado = ';'
+        if len(df_head.columns) < 2:
+            df_head = pd.read_csv(arquivo, encoding='latin1', sep=',', nrows=0)
+            sep_usado = ','
     except Exception as e:
-        print(f"Erro na carga JSON: {e}")
-        conn.rollback()
-    finally:
-        conn.close()
-
-
-def populate_from_csv():
-    print(f"\n--- Iniciando carga via CSV: {CSV_FILE} ---")
-    if not os.path.exists(CSV_FILE):
-        print("CSV não encontrado. Se quiser carga massiva, adicione o arquivo na pasta data/.")
+        print(f"Erro ao ler cabeçalho: {e}")
         return
 
->>>>>>> parent of 1fb7e74 (:sparkles: feat: Feito ranking dos ultimos 3 anos)
+    cols_existentes = list(df_head.columns)
+    cols_para_ler = [c for c in COLUNAS_DESEJADAS if c in cols_existentes]
+    cols_faltantes = list(set(COLUNAS_DESEJADAS) - set(cols_para_ler))
+
     conn = sqlite3.connect(DATABASE_NAME)
     total_inserido = 0
 
     try:
         csv_iterator = pd.read_csv(
-            CSV_FILE, encoding='latin1', delimiter=';',
-            usecols=COLUNAS_PARA_LER, chunksize=50000
-<<<<<<< HEAD
->>>>>>> parent of 1fb7e74 (:sparkles: feat: Feito ranking dos ultimos 3 anos)
-=======
->>>>>>> parent of 1fb7e74 (:sparkles: feat: Feito ranking dos ultimos 3 anos)
+            arquivo, encoding='latin1', delimiter=sep_usado,
+            usecols=cols_para_ler, chunksize=50000
         )
 
-        print(f"Filtrando região: {FILTRO_REGIAO}")
+        cursor = conn.cursor()
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-        with open('schema.sql') as f:
-            print("Criando as tabelas")
-            cursor.execute(f.read())
+        for chunk in csv_iterator:
+            for col in cols_faltantes:
+                chunk[col] = 0
 
-        print("Inserindo usuário padrão")
-        cursor.execute("INSERT INTO tb_usuario (nome, cpf, nascimento) VALUES (%s, %s, %s)",
-                       ('João da Silva', '00011122255', '2025-10-30'))
-        conn.commit()
+            if 'QT_MAT_BAS' in chunk.columns:
+                chunk['QT_MAT_TOTAL'] = chunk['QT_MAT_BAS']
+            else:
+                chunk['QT_MAT_TOTAL'] = 0
 
-    except OperationalError as e:
-        # Handle the error, print details, or log the error
-        print(f"The connection failed: {e}")
-        # Optional: Get the PostgreSQL error code
-        if hasattr(e, 'pgcode'):
-            print(f"PostgreSQL Error Code: {e.pgcode}")
+            chunk['NU_RANKING'] = 0
 
-    except psycopg2.Error as e:
-        # Catch any other general psycopg2 errors
-        print(f"A general psycopg2 error occurred: {e}")
+            cols_finais = COLUNAS_BASE_DB + ['QT_MAT_TOTAL', 'NU_RANKING']
+            chunk = chunk[cols_finais]
+            chunk.fillna(0, inplace=True)
 
-=======
-        for i, chunk_df in enumerate(csv_iterator):
-            # Filtro
-            chunk_filtrado = chunk_df[chunk_df["NO_REGIAO"].str.strip(
-            ).str.upper() == FILTRO_REGIAO]
+            registros = chunk.to_records(index=False).tolist()
 
-=======
-        for i, chunk_df in enumerate(csv_iterator):
-            # Filtro
-            chunk_filtrado = chunk_df[chunk_df["NO_REGIAO"].str.strip(
-            ).str.upper() == FILTRO_REGIAO]
+            placeholders = ','.join(['?'] * 26)
+            colunas_sql = ','.join(cols_finais)
 
->>>>>>> parent of 1fb7e74 (:sparkles: feat: Feito ranking dos ultimos 3 anos)
-            if not chunk_filtrado.empty:
-                chunk_final = chunk_filtrado[COLUNAS_DB].fillna(0)
+            cursor.executemany(f"""
+                INSERT OR IGNORE INTO entidades ({colunas_sql}) 
+                VALUES ({placeholders})
+            """, registros)
 
-                chunk_final.to_sql('entidades', conn,
-                                   if_exists='append', index=False)
-
-                registros_chunk = len(chunk_final)
-                total_inserido += registros_chunk
-                sys.stdout.write(
-                    f"\rChunks processados: {i+1} | Registros inseridos: {total_inserido}")
-                sys.stdout.flush()
-
-        print(f"\nCarga CSV finalizada! Total de {total_inserido} registros.")
+            conn.commit()
+            total_inserido += cursor.rowcount
+            print(f"Lote inserido. Total acumulado: {total_inserido}")
 
     except Exception as e:
-        print(f"\nErro na carga CSV: {e}")
-<<<<<<< HEAD
->>>>>>> parent of 1fb7e74 (:sparkles: feat: Feito ranking dos ultimos 3 anos)
-=======
->>>>>>> parent of 1fb7e74 (:sparkles: feat: Feito ranking dos ultimos 3 anos)
+        print(f"Erro na carga: {e}")
     finally:
-        print("Fechar conexão")
+        conn.close()
+
+
+def calcular_ranking_final():
+    print("\n--- Calculando Ranking por Ano (SQL) ---")
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+
+    try:
+        sql_update = """
+        UPDATE entidades
+        SET NU_RANKING = r.rank_calc
+        FROM (
+            SELECT CO_ENTIDADE, NU_ANO_CENSO,
+                   RANK() OVER (
+                       PARTITION BY NU_ANO_CENSO 
+                       ORDER BY QT_MAT_TOTAL DESC
+                   ) as rank_calc
+            FROM entidades
+        ) AS r
+        WHERE entidades.CO_ENTIDADE = r.CO_ENTIDADE 
+          AND entidades.NU_ANO_CENSO = r.NU_ANO_CENSO;
+        """
+
+        print("Executando atualização de ranking anual...")
+        cursor.execute(sql_update)
+        conn.commit()
+        print("Ranking calculado com sucesso!")
+
+    except Exception as e:
+        print(f"Erro ao calcular ranking: {e}")
+    finally:
         conn.close()
 
 
 if __name__ == "__main__":
-<<<<<<< HEAD
-    create_tables()
-=======
     if setup_database():
-        populate_from_csv()
-<<<<<<< HEAD
->>>>>>> parent of 1fb7e74 (:sparkles: feat: Feito ranking dos ultimos 3 anos)
-=======
->>>>>>> parent of 1fb7e74 (:sparkles: feat: Feito ranking dos ultimos 3 anos)
+        padrao_arquivos = os.path.join("data", "*.csv")
+        lista_arquivos = glob.glob(padrao_arquivos)
+
+        for arquivo_csv in lista_arquivos:
+            populate_from_csv(arquivo_csv)
+
+        calcular_ranking_final()

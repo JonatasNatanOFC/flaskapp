@@ -1,39 +1,35 @@
-<<<<<<< HEAD
-CREATE TABLE IF NOT EXISTS tb_instituicao (
-        id SERIAL PRIMARY KEY,
-        codigo TEXT NOT NULL,
-        nome TEXT NOT NULL,
-        co_uf INTEGER NOT NULL,
-        co_municipio INTEGER NOT NULL,
-        qt_mat_bas INTEGER NOT NULL,
-        qt_mat_prof INTEGER NOT NULL,
-        qt_mat_esp INTEGER NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS tb_usuario (
-        id SERIAL PRIMARY KEY,
-        nome TEXT NOT NULL,
-        cpf TEXT NOT NULL,
-        nascimento DATE NOT NULL
-=======
 DROP TABLE IF EXISTS entidades;
 DROP TABLE IF EXISTS tb_usuario;
 
 CREATE TABLE entidades (
-    CO_ENTIDADE INTEGER PRIMARY KEY,
-    NO_MUNICIPIO TEXT,
-    NO_ENTIDADE TEXT NOT NULL,
+    CO_ENTIDADE INTEGER,
+    NO_ENTIDADE TEXT,
+    NO_UF TEXT,
     SG_UF TEXT,
+    CO_UF INTEGER,
+    NO_MUNICIPIO TEXT,
+    CO_MUNICIPIO INTEGER,
+    NO_MESORREGIAO TEXT,
+    CO_MESORREGIAO INTEGER,
+    NO_MICRORREGIAO TEXT,
+    CO_MICRORREGIAO INTEGER,
+    NU_ANO_CENSO INTEGER,
+    NO_REGIAO TEXT,
+    CO_REGIAO INTEGER,
     QT_MAT_BAS INTEGER,
-    QT_MAT_INF INTEGER,
-    QT_MAT_FUND INTEGER,
-    QT_MAT_MED INTEGER,
-    QT_MAT_MED_CT INTEGER,
-    QT_MAT_MED_NM INTEGER,
     QT_MAT_PROF INTEGER,
-    QT_MAT_PROF_TEC INTEGER,
     QT_MAT_EJA INTEGER,
-    QT_MAT_ESP INTEGER
+    QT_MAT_ESP INTEGER,
+    QT_MAT_FUND INTEGER,
+    QT_MAT_INF INTEGER,
+    QT_MAT_MED INTEGER,
+    QT_MAT_ZR_NA INTEGER,
+    QT_MAT_ZR_RUR INTEGER,
+    QT_MAT_ZR_URB INTEGER,  -- <--- A vírgula que provavelmente faltava
+    QT_MAT_TOTAL INTEGER,
+    NU_RANKING INTEGER,
+
+    PRIMARY KEY (CO_ENTIDADE, NU_ANO_CENSO)
 );
 
 CREATE TABLE tb_usuario (
@@ -41,8 +37,4 @@ CREATE TABLE tb_usuario (
     nome TEXT NOT NULL,
     cpf TEXT UNIQUE NOT NULL,
     nascimento TEXT
-<<<<<<< HEAD
->>>>>>> parent of 1fb7e74 (:sparkles: feat: Feito ranking dos ultimos 3 anos)
-=======
->>>>>>> parent of 1fb7e74 (:sparkles: feat: Feito ranking dos ultimos 3 anos)
 );
